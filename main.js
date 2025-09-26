@@ -221,3 +221,22 @@ setInterval(()=>{
         saveToGithub();
     }
 },1000);
+// OAuth 認証後
+const code = getCodeFromUrl(); // URL から code を取得
+const res = await fetch('/Functions/oauth', {
+  method: 'POST',
+  body: JSON.stringify({ code }),
+});
+const { access_token } = await res.json();
+
+// ゲームデータ保存
+await fetch('/Functions/SaveData', {
+  method: 'POST',
+  body: JSON.stringify({
+    access_token,
+    repo: 'username/clicker-data',
+    path: 'save.json',
+    content: gameData
+  }),
+});
+
