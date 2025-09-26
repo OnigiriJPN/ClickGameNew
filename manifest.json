@@ -1,6 +1,6 @@
 {
-  "name": "Clicker Game",
-  "short_name": "Clicker",
+  "name": "Clicker Game New",
+  "short_name": "Clicker New",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
