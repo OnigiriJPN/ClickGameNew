@@ -1,15 +1,12 @@
-import fetch from 'node-fetch';
+async function getUserRepos() {
+    const token = localStorage.getItem('github_token');
+    if (!token) return [];
 
-export async function handler(event) {
-    const { code } = JSON.parse(event.body);
-    const client_id = process.env.GITHUB_CLIENT_ID;
-    const client_secret = process.env.GITHUB_CLIENT_SECRET;
-
-    const response = await fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: {'Accept':'application/json','Content-Type':'application/json'},
-        body: JSON.stringify({client_id, client_secret, code})
+    const resp = await fetch('https://api.github.com/user/repos?per_page=100', {
+        headers: { 'Authorization': 'token ' + token }
     });
-    const data = await response.json();
-    return { statusCode: 200, body: JSON.stringify({access_token: data.access_token}) };
+
+    const data = await resp.json();
+    // dataは配列 [{name, full_name, private, ...}, ...]
+    return data.map(r => ({ name: r.name, full_name: r.full_name, private: r.private }));
 }
