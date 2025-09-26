@@ -2,11 +2,14 @@
 let score = 0;
 let slots = [];
 let achievements = JSON.parse(localStorage.getItem('achievements')) || {};
+let selectedRepoFullName = localStorage.getItem('selectedRepo') || null;
 
 const scoreEl = document.getElementById('score');
 const clickBtn = document.getElementById('clickBtn');
 const slotsContainer = document.getElementById('slotsContainer');
 const githubLoginBtn = document.getElementById('githubLoginBtn');
+const repoSelect = document.getElementById('repoSelect');
+const repoConfirmBtn = document.getElementById('repoConfirmBtn');
 
 // 効果音
 const clickSound = new Audio('click.mp3');
@@ -16,10 +19,8 @@ const slotSound = new Audio('slot.mp3');
 clickBtn.addEventListener('click', () => {
     score++;
     scoreEl.textContent = score;
-
     clickBtn.style.transform = 'scale(1.1)';
     setTimeout(() => clickBtn.style.transform = 'scale(1)', 100);
-
     clickSound.play();
     checkAchievements();
     saveToGithub();
@@ -40,7 +41,7 @@ function createSlot(name='Slot') {
 
     slotSound.play();
     slot.style.opacity = 0;
-    setTimeout(() => slot.style.opacity = 1, 50); // fade in
+    setTimeout(() => slot.style.opacity = 1, 50);
 
     slots.push({name});
     localStorage.setItem('slots', JSON.stringify(slots));
@@ -48,7 +49,7 @@ function createSlot(name='Slot') {
 }
 
 function removeSlot(slotEl) {
-    slotEl.style.opacity = 0; // fade out
+    slotEl.style.opacity = 0;
     setTimeout(() => slotEl.remove(), 300);
 
     const index = slots.findIndex(s => s.name === slotEl.textContent.replace('✕',''));
@@ -112,6 +113,7 @@ githubLoginBtn.addEventListener('click', () => {
     window.location.href = authUrl;
 });
 
+// 認証後に code を取得
 window.addEventListener('load', async ()=>{
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
@@ -119,7 +121,7 @@ window.addEventListener('load', async ()=>{
         const token = await exchangeCodeForToken(code);
         localStorage.setItem('github_token', token);
         window.history.replaceState({}, document.title, redirectUri);
-        loadFromGithub();
+        await populateRepoSelect();
     }
 });
 
@@ -134,13 +136,48 @@ async function exchangeCodeForToken(code){
     return data.access_token;
 }
 
+// ======== リポジトリ選択 ========
+async function getUserRepos() {
+    const token = localStorage.getItem('github_token');
+    if (!token) return [];
+
+    const resp = await fetch('https://api.github.com/user/repos?per_page=100', {
+        headers: { 'Authorization': 'token ' + token }
+    });
+
+    const data = await resp.json();
+    return data.map(r => ({ name: r.name, full_name: r.full_name, private: r.private }));
+}
+
+async function populateRepoSelect() {
+    const repos = await getUserRepos();
+    repoSelect.innerHTML = '<option>リポジトリを選択してください</option>';
+    repos.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.full_name;
+        opt.textContent = r.name + (r.private ? ' (private)' : '');
+        repoSelect.appendChild(opt);
+    });
+}
+
+// リポジトリ選択確定
+repoConfirmBtn.addEventListener('click', () => {
+    selectedRepoFullName = repoSelect.value;
+    if(selectedRepoFullName){
+        localStorage.setItem('selectedRepo', selectedRepoFullName);
+        alert(`リポジトリ「${selectedRepoFullName}」を同期先として設定しました`);
+        loadFromGithub();
+    }
+});
+
 // ======== GitHubクラウド同期 ========
 async function saveToGithub(){
     const token = localStorage.getItem('github_token');
-    if(!token) return;
+    const repo = localStorage.getItem('selectedRepo');
+    if(!token || !repo) return;
 
     const data = { score, slots, achievements };
-    await fetch('https://api.github.com/repos/USERNAME/REPO/contents/data.json',{
+    await fetch(`https://api.github.com/repos/${repo}/contents/data.json`, {
         method:'PUT',
         headers:{
             'Authorization':'token '+token,
@@ -155,11 +192,14 @@ async function saveToGithub(){
 
 async function loadFromGithub(){
     const token = localStorage.getItem('github_token');
-    if(!token) return;
+    const repo = localStorage.getItem('selectedRepo');
+    if(!token || !repo) return;
 
-    const resp = await fetch('https://api.github.com/repos/USERNAME/REPO/contents/data.json',{
+    const resp = await fetch(`https://api.github.com/repos/${repo}/contents/data.json`, {
         headers:{ 'Authorization':'token '+token }
     });
+    if(!resp.ok) return;
+
     const data = await resp.json();
     const jsonData = JSON.parse(atob(data.content));
 
@@ -175,8 +215,9 @@ async function loadFromGithub(){
 // ======== 自動増加バフ ========
 setInterval(()=>{
     if(slots.length>0){
-        score += slots.length; // スロット数に応じて自動増加
+        score += slots.length;
         scoreEl.textContent = score;
         checkAchievements();
+        saveToGithub();
     }
 },1000);
