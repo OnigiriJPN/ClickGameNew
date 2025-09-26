@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>クリッカーゲーム</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>クリッカーゲーム</h1>
+    <div class="score">ポイント: <span id="score">0</span></div>
+    <button id="clickerBtn" class="clicker-btn">クリック!</button>
+
+    <h2>スロット管理</h2>
+    <div class="slots-container" id="slotsContainer"></div>
+    <button id="addSlotBtn">スロット追加</button>
+
+    <button id="newGameBtn">ニューゲーム</button>
+</div>
+
+<audio id="clickSound" src="click.mp3"></audio>
+<audio id="slotSound" src="slot.mp3"></audio>
+
+<script src="main.js"></script>
+</body>
+</html>
