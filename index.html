@@ -3,32 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>クリッカーゲームNew</title>
+<title>クリッカーゲーム</title>
 <link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
+<style>
+/* 簡易CSSサンプル */
+
+</style>
 </head>
 <body>
-<div class="container">
-    <h1>クリッカーゲームNew</h1>
-    <div class="score">ポイント: <span id="score">0</span></div>
-    <button id="clickerBtn" class="clicker-btn">クリック!</button>
 
-    <h2>スロット管理</h2>
-    <div class="slots-container" id="slotsContainer"></div>
-    <button id="addSlotBtn">スロット追加</button>
-    <button id="newGameBtn">ニューゲーム</button>
-</div>
+<h1>クリッカーゲーム</h1>
+<div id="score">0</div>
+<button id="clickBtn">Click!</button>
 
-<audio id="clickSound" src="click.mp3"></audio>
-<audio id="slotSound" src="slot.mp3"></audio>
+<h2>スロット</h2>
+<div id="slotsContainer"></div>
+<button onclick="createSlot()">スロット追加</button>
+
+<h2>GitHubクラウド同期</h2>
+<button id="githubLoginBtn">GitHubでログイン</button>
+<br>
+<select id="repoSelect">
+  <option>リポジトリを選択してください</option>
+</select>
+<button id="repoConfirmBtn">選択</button>
+
+<!-- 効果音 -->
+<audio id="clickAudio" src="click.mp3"></audio>
+<audio id="slotAudio" src="slot.mp3"></audio>
 
 <script src="main.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-    .then(() => console.log('Service Worker registered'))
-    .catch(err => console.log(err));
-}
-</script>
 </body>
 </html>
